@@ -21,17 +21,19 @@ class App(object):
         self.entries = []
         self.max_brightness = os.popen("brightnessctl m -m").read().rstrip()
 
+    def brightness_from_percent(self, brightness_percentage) -> int:
+        return int(int(brightness_percentage) * int(self.max_brightness) / 100)
+
     def activate(self, index):
         if not self.entries:
             return
 
         if self.entries[index].can_be_activated:
-            os.system(f'/usr/bin/brightnessctl s {self.entries[index].value}')
+            os.system(f'/usr/bin/brightnessctl s {self.brightness_from_percent(self.entries[index].value)}')
             sys.stdout.write('"Close"\n')
             sys.stdout.flush()
 
     def search(self, query):
-        sys.stdout.write('"Clear"\n')
         self.entries = []
 
         self.append_user_defined_brightness(query)
