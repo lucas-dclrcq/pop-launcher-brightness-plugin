@@ -1,0 +1,11 @@
+(
+    name: "Brightness Control",
+    description: "Syntax: bright <query>",
+    query: (
+        regex: "^bright",
+        help: "bright ",
+        isolate: true
+    ),
+    bin: (path: "bright"),
+    icon: Name("brightness")
+)

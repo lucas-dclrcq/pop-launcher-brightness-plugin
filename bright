@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import sys
+
+brightness_levels = [0, 20, 40, 60, 80, 100]
+value_min = 0
+value_max = 100
+
+
+class BrightnessEntry:
+    def __init__(self, value, description, can_be_activated):
+        self.value = value
+        self.description = description
+        self.can_be_activated = can_be_activated
+
+
+class App(object):
+    def __init__(self):
+        self.entries = []
+        self.max_brightness = os.popen("brightnessctl m -m").read().rstrip()
+
+    def activate(self, index):
+        if not self.entries:
+            return
+
+        if self.entries[index].can_be_activated:
+            os.system(f'/usr/bin/brightnessctl s {self.entries[index].value}')
+            sys.stdout.write('"Close"\n')
+            sys.stdout.flush()
+
+    def search(self, query):
+        sys.stdout.write('"Clear"\n')
+        self.entries = []
+
+        self.append_user_defined_brightness(query)
+
+        self.append_brightness_steps()
+
+        self.append_current_brightness()
+
+        for index, entry in enumerate(self.entries):
+            sys.stdout.write(json.dumps({
+                'Append': {
+                    'id': index,
+                    'name': entry.description,
+                    'description': 'None',
+                    'keywords': None,
+                    'icon': None,
+                    'exec': None,
+                    'window': None
+                }
+            }))
+            sys.stdout.write('\n')
+
+        sys.stdout.write('"Finished"\n')
+        sys.stdout.flush()
+
+    def append_brightness_steps(self):
+        for level in brightness_levels:
+            self.entries.append(BrightnessEntry(level, f'{level}%', True))
+
+    def append_current_brightness(self):
+        current_brightness = os.popen('brightnessctl g').readline().rstrip()
+        self.entries.append(BrightnessEntry(current_brightness, f'Current brightness: {current_brightness}%', False))
+
+    def append_user_defined_brightness(self, query):
+        query = query.split(' ', 1)[1]
+        error = 'Enter value between 0 and 100'
+
+        try:
+            if 100 >= int(query) >= 0:
+                self.entries.append(BrightnessEntry(query, f'{query}%', True))
+            else:
+                self.entries.append(BrightnessEntry(None, error, False))
+        except ValueError:
+            self.entries.append(BrightnessEntry(None, error, False))
+
+
+# Main Execution
+
+def main():
+    app = App()
+
+    for line in sys.stdin:
+        try:
+            request = json.loads(line)
+            if 'Search' in request:
+                app.search(request['Search'])
+            elif 'Activate' in request:
+                app.activate(request['Activate'])
+        except json.decoder.JSONDecodeError:
+            pass
+
+
+if __name__ == '__main__':
+    main()
