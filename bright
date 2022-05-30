@@ -24,6 +24,9 @@ class App(object):
     def brightness_from_percent(self, brightness_percentage) -> int:
         return int(int(brightness_percentage) * int(self.max_brightness) / 100)
 
+    def brightness_to_percent(self, brightness_value) -> int:
+        return int(int(brightness_value) * 100 / int(self.max_brightness))
+
     def activate(self, index):
         if not self.entries:
             return
@@ -49,7 +52,9 @@ class App(object):
                     'name': entry.description,
                     'description': 'None',
                     'keywords': None,
-                    'icon': None,
+                    'icon': {
+                        'Name': 'weather-clear'
+                    },
                     'exec': None,
                     'window': None
                 }
@@ -65,6 +70,7 @@ class App(object):
 
     def append_current_brightness(self):
         current_brightness = os.popen('brightnessctl g').readline().rstrip()
+        current_brightness = self.brightness_to_percent(current_brightness)
         self.entries.append(BrightnessEntry(current_brightness, f'Current brightness: {current_brightness}%', False))
 
     def append_user_defined_brightness(self, query):

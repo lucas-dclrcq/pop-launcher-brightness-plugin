@@ -8,5 +8,5 @@
         no_sort: true
     ),
     bin: (path: "bright"),
-    icon: Name("brightness")
+    icon: Name("weather-clear")
 )
